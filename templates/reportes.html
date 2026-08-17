@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Reportes</p>
+        <h1 class="page-title">Centro de análisis</h1>
+    </div>
+    <form method="get" action="/reportes" class="d-flex gap-2 align-items-center flex-wrap">
+        <label class="form-label mb-0">Desde</label>
+        <input id="fechaDesde" class="form-control" type="date" name="desde" value="{{ desde or '' }}" />
+        <label class="form-label mb-0">Hasta</label>
+        <input id="fechaHasta" class="form-control" type="date" name="hasta" value="{{ hasta or '' }}" />
+        <button id="btnAplicarFiltro" class="btn btn-primary" type="submit">Filtrar</button>
+        <a class="btn btn-outline-primary" href="/reportes/exportar-pdf?desde={{ desde or '' }}&hasta={{ hasta or '' }}">Exportar PDF</a>
+    </form>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Ventas totales</span>
+            <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+        </div>
+        <div class="kpi-value">${{ '%.2f'|format(venta_total) }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-arrow-up-right"></i> Monto consolidado</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Pagos registrados</span>
+            <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
+        </div>
+        <div class="kpi-value">{{ pagos|length }}</div>
+        <div class="kpi-fx"><i class="bi bi-list-check"></i> En proceso</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Estado de pagos</span>
+            <div class="kpi-icon"><i class="bi bi-shield-check"></i></div>
+        </div>
+        <div class="kpi-value">{{ 'Activos' if pagos else 'Sin pagos' }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-check-circle"></i> Estado actual</div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Ventas por marca</h3>
+            </div>
+            <canvas id="ventasPorMarcaChart" height="220"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>Evolución mensual</h3>
+            </div>
+            <canvas id="evolucionMensualChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="table-card mt-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pagos %}
+                <tr>
+                    <td>{{ p.cliente_id }}</td>
+                    <td>${{ p.monto }}</td>
+                    <td><span class="badge purple">{{ p.estado }}</span></td>
+                    <td>{{ p.fecha_pago.strftime('%Y-%m-%d') if p.fecha_pago else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ventasPorMarcaData = {{ ventas_por_marca | tojson }};
+  const evolucionMensualData = {{ evolucion_mensual | tojson }};
+
+  const marcaLabels = ventasPorMarcaData.map(item => item.marca);
+  const marcaValues = ventasPorMarcaData.map(item => item.ventas);
+
+  new Chart(document.getElementById('ventasPorMarcaChart'), {
+    type: 'bar',
+    data: {
+      labels: marcaLabels,
+      datasets: [{
+        label: 'Ventas',
+        data: marcaValues,
+        backgroundColor: '#6c63ff',
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label: (context) => `$${Number(context.parsed.y).toLocaleString('es-MX')}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
+          }
+        }
+      }
+    }
+  });
+
+  const mesesLabels = evolucionMensualData.map(item => item.mes);
+  const mesesValues = evolucionMensualData.map(item => item.ventas);
+
+  new Chart(document.getElementById('evolucionMensualChart'), {
+    type: 'line',
+    data: {
+      labels: mesesLabels,
+      datasets: [{
+        label: 'Evolución mensual',
+        data: mesesValues,
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34, 197, 94, 0.18)',
+        borderWidth: 3,
+        tension: 0.35,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            label: (context) => `$${Number(context.parsed.y).toLocaleString('es-MX')}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

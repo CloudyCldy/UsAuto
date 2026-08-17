@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Dashboard</p>
+        <h1 class="page-title">Análisis automotriz</h1>
+        <p class="page-subtitle">Indicadores clave de ventas, clientes y rendimiento comercial.</p>
+    </div>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Total clientes</span>
+            <div class="kpi-icon"><i class="bi bi-people"></i></div>
+        </div>
+        <div class="kpi-value">{{ metricas.total_clientes }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-arrow-up-right"></i> +12.4%</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Total vehículos</span>
+            <div class="kpi-icon"><i class="bi bi-car-front"></i></div>
+        </div>
+        <div class="kpi-value">{{ metricas.total_vehiculos }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-arrow-up-right"></i> +8.1%</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Total ventas</span>
+            <div class="kpi-icon"><i class="bi bi-cart-check"></i></div>
+        </div>
+        <div class="kpi-value">{{ metricas.total_ventas }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-arrow-up-right"></i> +9.7%</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Ingresos totales</span>
+            <div class="kpi-icon"><i class="bi bi-currency-dollar"></i></div>
+        </div>
+        <div class="kpi-value">${{ metricas.ingresos_totales }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-arrow-up-right"></i> +14.8%</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Ticket promedio</span>
+            <div class="kpi-icon"><i class="bi bi-ticket-perforated"></i></div>
+        </div>
+        <div class="kpi-value">${{ metricas.ticket_promedio }}</div>
+        <div class="kpi-fx"><i class="bi bi-graph-up-arrow"></i> Estándar</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Clientes activos</span>
+            <div class="kpi-icon"><i class="bi bi-person-check"></i></div>
+        </div>
+        <div class="kpi-value">{{ stats.clientes }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-arrow-up-right"></i> +5.3%</div>
+    </div>
+</div>
+
+<div class="kpi-grid" style="margin-top: 0;">
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Modelo más vendido</span>
+            <div class="kpi-icon"><i class="bi bi-bar-chart"></i></div>
+        </div>
+        <div class="kpi-value" style="font-size:1.4rem;">{{ metricas.modelo_mas_vendido }}</div>
+        <div class="kpi-fx"><i class="bi bi-star-fill"></i> Líder de catálogo</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Mejor vendedor</span>
+            <div class="kpi-icon"><i class="bi bi-person-badge"></i></div>
+        </div>
+        <div class="kpi-value" style="font-size:1.4rem;">{{ metricas.mejor_vendedor }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-trophy"></i> Rendimiento alto</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Sucursal</span>
+            <div class="kpi-icon"><i class="bi bi-geo-alt"></i></div>
+        </div>
+        <div class="kpi-value" style="font-size:1.4rem;">{{ metricas.sucursal_con_mas_ventas }}</div>
+        <div class="kpi-fx"><i class="bi bi-graph-up"></i> Máximo volumen</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top">
+            <span class="kpi-label">Status de actividad</span>
+            <div class="kpi-icon"><i class="bi bi-activity"></i></div>
+        </div>
+        <div class="kpi-value" style="font-size:1.4rem;">{{ stats.clientes }}</div>
+        <div class="kpi-fx positive"><i class="bi bi-check-circle"></i> Activo</div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 class="panel-title">Ventas por marca</h3>
+            <span class="badge purple">Performance</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartVentasMarca" height="220"></canvas>
+        </div>
+    </div>
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 class="panel-title">Ventas por tipo de vehículo</h3>
+            <span class="badge rosa">Segmentación</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartVentasTipo" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 class="panel-title">Distribución de precios</h3>
+            <span class="badge lavanda">Histograma</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartPrecios" height="220"></canvas>
+        </div>
+    </div>
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 class="panel-title">Ingreso mensual vs presupuesto</h3>
+            <span class="badge purple">Scatter</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartIngresoPresupuesto" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 class="panel-title">Precio por marca</h3>
+            <span class="badge rose">Promedio</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartPrecioMarca" height="220"></canvas>
+        </div>
+    </div>
+    <div class="panel-card">
+        <div class="panel-header">
+            <h3 class="panel-title">Evolución mensual de ventas</h3>
+            <span class="badge purple">Serie temporal</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartEvolucionMensual" height="220"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const dashboardData = {{ dashboard_data | tojson }};
+
+  const ventasMarca = dashboardData.ventas_por_marca || [];
+  const ventasTipo = dashboardData.ventas_por_tipo || [];
+  const precios = dashboardData.precios || [];
+  const ingresoPresupuesto = dashboardData.ingreso_vs_presupuesto || [];
+  const precioMarca = dashboardData.precio_por_marca || [];
+  const evolucionMensual = dashboardData.evolucion_mensual || [];
+
+  if (ventasMarca.length) {
+    new Chart(document.getElementById('chartVentasMarca'), {
+      type: 'bar',
+      data: {
+        labels: ventasMarca.map(item => item.marca),
+        datasets: [{
+          label: 'Ventas',
+          data: ventasMarca.map(item => item.ventas),
+          backgroundColor: '#6c63ff',
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: (context) => `$${Number(context.parsed.y).toLocaleString('es-MX')}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  if (ventasTipo.length) {
+    new Chart(document.getElementById('chartVentasTipo'), {
+      type: 'doughnut',
+      data: {
+        labels: ventasTipo.map(item => item.tipo),
+        datasets: [{
+          data: ventasTipo.map(item => item.cantidad),
+          backgroundColor: ['#6C3FA8', '#E85AAE', '#8E5CC7', '#DCC6F2', '#3A1F52']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: true },
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: (context) => `${context.label}: ${context.parsed} unidades`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  if (precios.length) {
+    const bins = Array.from({ length: 8 }, (_, i) => []);
+    const min = Math.min(...precios);
+    const max = Math.max(...precios);
+    const step = max - min === 0 ? 1 : (max - min) / bins.length;
+
+    precios.forEach(value => {
+      let index = Math.min(Math.floor((value - min) / step), bins.length - 1);
+      if (value === max) index = bins.length - 1;
+      bins[index].push(value);
+    });
+
+    new Chart(document.getElementById('chartPrecios'), {
+      type: 'bar',
+      data: {
+        labels: bins.map((_, index) => `Bin ${index + 1}`),
+        datasets: [{
+          label: 'Precios',
+          data: bins.map(values => values.length),
+          backgroundColor: '#8E5CC7'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: (context) => `${context.parsed.y} vehículos`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  if (ingresoPresupuesto.length) {
+    new Chart(document.getElementById('chartIngresoPresupuesto'), {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Ingreso vs Presupuesto',
+          data: ingresoPresupuesto.map(item => ({ x: item.ingreso, y: item.presupuesto })),
+          backgroundColor: '#E85AAE'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        events: [],
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Ingreso mensual' } },
+          y: { title: { display: true, text: 'Presupuesto' } }
+        }
+      }
+    });
+  }
+
+  if (precioMarca.length) {
+    new Chart(document.getElementById('chartPrecioMarca'), {
+      type: 'bar',
+      data: {
+        labels: precioMarca.map(item => item.marca),
+        datasets: [{
+          label: 'Precio promedio',
+          data: precioMarca.map(item => item.precio),
+          backgroundColor: '#E85AAE'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        events: [],
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  if (evolucionMensual.length) {
+    new Chart(document.getElementById('chartEvolucionMensual'), {
+      type: 'line',
+      data: {
+        labels: evolucionMensual.map(item => item.mes),
+        datasets: [{
+          label: 'Ventas',
+          data: evolucionMensual.map(item => item.ventas),
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.18)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        events: [],
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

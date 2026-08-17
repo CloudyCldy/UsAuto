@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usagi Autos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-mark"><i class="bi bi-car-front-fill"></i></div>
+                <div class="brand-text">うさぎ<br>Autos</div>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Sidebar navigation">
+                {% set current_path = request.path %}
+                <a class="nav-link {% if current_path == '/' %}active{% endif %}" href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a class="nav-link {% if current_path == '/clientes' %}active{% endif %}" href="/clientes"><i class="bi bi-people"></i> Clientes</a>
+                <a class="nav-link {% if current_path == '/vehiculos' %}active{% endif %}" href="/vehiculos"><i class="bi bi-car-front"></i> Vehículos</a>
+                <a class="nav-link {% if current_path == '/vendedores' %}active{% endif %}" href="/vendedores"><i class="bi bi-person-badge"></i> Vendedores</a>
+                <a class="nav-link {% if current_path == '/cotizaciones' %}active{% endif %}" href="/cotizaciones"><i class="bi bi-file-earmark-text"></i> Cotizaciones</a>
+                <a class="nav-link {% if current_path == '/ventas' %}active{% endif %}" href="/ventas"><i class="bi bi-cart-check"></i> Ventas</a>
+                <a class="nav-link {% if current_path == '/financiamientos' %}active{% endif %}" href="/financiamientos"><i class="bi bi-credit-card"></i> Financiamiento</a>
+                <a class="nav-link {% if current_path == '/servicios' %}active{% endif %}" href="/servicios"><i class="bi bi-tools"></i> Servicios</a>
+                <a class="nav-link {% if current_path == '/reportes' %}active{% endif %}" href="/reportes"><i class="bi bi-bar-chart"></i> Reportes</a>
+                <a class="nav-link {% if current_path == '/machine-learning' %}active{% endif %}" href="/machine-learning"><i class="bi bi-robot"></i> Machine Learning</a>
+            </nav>
+
+            <div class="sidebar-footer">AI • ANALYTICS</div>
+        </aside>
+
+        <main class="page-content">
+            <div class="page-inner">
+                {% block content %}{% endblock %}
+            </div>
+            <footer class="app-footer">
+                <div><span class="footer-brand">Usagi Autos</span> • Análisis de datos y Machine Learning</div>
+                <div>Data-driven mobility</div>
+            </footer>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Salvaguarda: si un modal se cierra y queda un backdrop "fantasma"
+    // bloqueando los clics, lo limpiamos automáticamente.
+    document.addEventListener('hidden.bs.modal', function () {
+        if (!document.querySelector('.modal.show')) {
+            document.querySelectorAll('.modal-backdrop').forEach(function (el) { el.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }
+    });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

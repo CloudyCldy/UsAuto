@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Machine Learning</p>
+        <h1 class="page-title">Predicción de compra</h1>
+        <p class="page-subtitle">Analiza el comportamiento del cliente mediante Machine Learning.</p>
+    </div>
+</div>
+
+<div class="ml-layout">
+    <div class="panel-card ml-form-card">
+        <div class="panel-header" style="margin-bottom: 18px;">
+            <h3 class="panel-title">Parámetros del cliente</h3>
+            <span class="badge purple">AI model</span>
+        </div>
+        <form id="ml-form" class="row g-3">
+            <div class="col-md-4"><label class="form-label">Edad</label><input type="number" class="form-control" name="edad" value="35" required></div>
+            <div class="col-md-4"><label class="form-label">Ingreso mensual</label><input type="number" class="form-control" name="ingreso_mensual" value="45000" required></div>
+            <div class="col-md-4"><label class="form-label">Historial de compras</label><input type="number" class="form-control" name="historial_compras" value="2" required></div>
+            <div class="col-md-4"><label class="form-label">Número de cotizaciones</label><input type="number" class="form-control" name="numero_cotizaciones" value="3" required></div>
+            <div class="col-md-4"><label class="form-label">Visitas a la agencia</label><input type="number" class="form-control" name="visitas_agencia" value="4" required></div>
+            <div class="col-md-4"><label class="form-label">Presupuesto</label><input type="number" class="form-control" name="presupuesto" value="600000" required></div>
+            <div class="col-md-4"><label class="form-label">Financiamiento</label><select class="form-select" name="financiamiento"><option value="1">Sí</option><option value="0">No</option></select></div>
+            <div class="col-md-4"><label class="form-label">Tipo de cliente</label><select class="form-select" name="tipo_cliente"><option value="Nuevo">Nuevo</option><option value="Frecuente">Frecuente</option><option value="VIP">VIP</option><option value="Empresarial">Empresarial</option></select></div>
+            <div class="col-md-4"><label class="form-label">Marca de interés</label><select class="form-select" name="marca_interes"><option value="Toyota">Toyota</option><option value="Honda">Honda</option><option value="Ford">Ford</option><option value="Chevrolet">Chevrolet</option><option value="Nissan">Nissan</option><option value="BMW">BMW</option></select></div>
+            <div class="col-md-4"><label class="form-label">Antigüedad como cliente</label><input type="number" class="form-control" name="antiguedad_cliente" value="3" required></div>
+            <div class="col-md-12 mt-3"><button type="submit" class="btn btn-primary">Predecir</button></div>
+        </form>
+    </div>
+
+    <div class="panel-card ml-result-card result-card--high" id="resultado-card">
+        <div class="result-badge">Predicción</div>
+        <div class="result-label">Resultado</div>
+        <div class="result-value" id="resultado">Esperando predicción...</div>
+        <div class="result-probability" id="probabilidad">Probabilidad: --</div>
+        <div class="result-meta">Modelo: Random Forest</div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('ml-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/api/predict', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const card = document.getElementById('resultado-card');
+            const resultado = document.getElementById('resultado');
+            const probabilidadTexto = document.getElementById('probabilidad');
+            const isHigh = Number(data.probabilidad) >= 0.7;
+            const isMedium = Number(data.probabilidad) >= 0.4 && Number(data.probabilidad) < 0.7;
+
+            card.classList.remove('result-card--high', 'result-card--medium', 'result-card--low');
+            if (isHigh) {
+                card.classList.add('result-card--high');
+            } else if (isMedium) {
+                card.classList.add('result-card--medium');
+            } else {
+                card.classList.add('result-card--low');
+            }
+
+            resultado.textContent = data.resultado || 'Sin resultado';
+            probabilidadTexto.textContent = 'Probabilidad: ' + data.probabilidad;
+        });
+    });
+</script>
+{% endblock %}
