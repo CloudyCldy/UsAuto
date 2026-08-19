@@ -124,6 +124,24 @@ Desde la carpeta raíz del proyecto, ejecuta:
 
 El archivo `seed.py` se encarga de insertar los datos iniciales necesarios para las pruebas y el funcionamiento del sistema.
 
+### Usuarios de acceso
+
+El seed de usuarios es independiente y no elimina ni modifica los datos de negocio. Ejecútalo desde la raíz:
+
+```powershell
+.\.venv\Scripts\python.exe database/seed_users.py
+```
+
+Credenciales iniciales:
+
+```text
+Usuario: admin
+Correo: admin@usagimotors.com
+Contraseña: Usagi123!
+```
+
+Las contraseñas se almacenan usando `password_hash`; nunca se guardan en texto plano. Después del primer acceso se recomienda cambiar la contraseña desde una futura pantalla de administración.
+
 ---
 
 ## Ejecutar la aplicación

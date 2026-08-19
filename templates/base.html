@@ -36,7 +36,10 @@
                 <a class="nav-link {% if current_path == '/machine-learning' %}active{% endif %}" href="/machine-learning"><i class="bi bi-robot"></i> Machine Learning</a>
             </nav>
 
-            <div class="sidebar-footer">AI • ANALYTICS</div>
+            <div class="sidebar-footer">
+                <div class="mb-2">Hola, {{ current_user or 'Usuario' }}</div>
+                <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
+            </div>
         </aside>
 
         <main class="page-content">

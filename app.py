@@ -9,7 +9,7 @@ os.environ.setdefault('OMP_NUM_THREADS', '1')
 import joblib
 import pandas as pd
 from bson import ObjectId
-from flask import Flask, render_template, request, jsonify, Response, redirect
+from flask import Flask, render_template, request, jsonify, Response, redirect, session, url_for, flash
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -17,6 +17,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.pdfgen import canvas as pdfcanvas
+from werkzeug.security import check_password_hash, generate_password_hash
 from config.database import get_db
 from analysis.analisis_datos import obtener_metricas_dashboard, analisis_ventas
 from analysis.visualizacion import generar_graficas_base64, obtener_df_visualizacion, obtener_datos_reportes_negocio
@@ -25,7 +26,89 @@ from analysis.kmeans import entrenar_kmeans
 from analysis.pca import entrenar_pca
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'usagi_autos_secret'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'usagi_autos_secret')
+
+PUBLIC_ENDPOINTS = {'login', 'register', 'logout', 'static'}
+
+
+@app.before_request
+def require_login():
+    if request.endpoint not in PUBLIC_ENDPOINTS and 'user_id' not in session:
+        return redirect(url_for('login', next=request.path))
+
+
+@app.context_processor
+def inject_current_user():
+    return {'current_user': session.get('user_name')}
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        identifier = request.form.get('identifier', '').strip().lower()
+        password = request.form.get('password', '')
+        user = get_db().usuarios.find_one({
+            '$or': [{'email': identifier}, {'username': identifier}]
+        })
+        if user and user.get('activo', True) and check_password_hash(user.get('password_hash', ''), password):
+            session.clear()
+            session['user_id'] = str(user['_id'])
+            session['user_name'] = user.get('nombre') or user.get('username')
+            next_url = request.args.get('next') or request.form.get('next')
+            return redirect(next_url if next_url and next_url.startswith('/') else url_for('index'))
+        flash('Correo, usuario o contraseña incorrectos.', 'danger')
+
+    return render_template('login.html', next_url=request.args.get('next', ''))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        nombre = request.form.get('nombre', '').strip()
+        username = request.form.get('username', '').strip().lower()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        password_confirmation = request.form.get('password_confirmation', '')
+
+        if not nombre or not username or not email or not password:
+            flash('Completa todos los campos.', 'danger')
+        elif len(password) < 8:
+            flash('La contraseña debe tener al menos 8 caracteres.', 'danger')
+        elif password != password_confirmation:
+            flash('Las contraseñas no coinciden.', 'danger')
+        elif get_db().usuarios.find_one({'$or': [{'email': email}, {'username': username}]}):
+            flash('El correo o usuario ya está registrado.', 'danger')
+        else:
+            try:
+                user = {
+                    'nombre': nombre,
+                    'username': username,
+                    'email': email,
+                    'password_hash': generate_password_hash(password),
+                    'role': 'user',
+                    'activo': True,
+                    'created_at': datetime.utcnow(),
+                }
+                result = get_db().usuarios.insert_one(user)
+                session['user_id'] = str(result.inserted_id)
+                session['user_name'] = nombre
+                return redirect(url_for('index'))
+            except (PyMongoError, ServerSelectionTimeoutError, OSError, ValueError):
+                flash('No fue posible crear la cuenta. Intenta nuevamente.', 'danger')
+
+    return render_template('register.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 # Agregar funciones globales para Jinja2
 app.jinja_env.globals.update(max=max, min=min)
