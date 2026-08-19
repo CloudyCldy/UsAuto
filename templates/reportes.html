@@ -11,7 +11,7 @@
         <label class="form-label mb-0">Hasta</label>
         <input id="fechaHasta" class="form-control" type="date" name="hasta" value="{{ hasta or '' }}" />
         <button id="btnAplicarFiltro" class="btn btn-primary" type="submit">Filtrar</button>
-        <a class="btn btn-outline-primary" href="/reportes/exportar-pdf?desde={{ desde or '' }}&hasta={{ hasta or '' }}">Exportar PDF</a>
+        <a class="btn btn-outline-primary" href="/reportes/exportar-pdf?desde={{ desde or '' }}&hasta={{ hasta or '' }}"><i class="bi bi-file-earmark-pdf"></i> Exportar PDF</a>
     </form>
 </div>
 
@@ -29,7 +29,7 @@
             <span class="kpi-label">Pagos registrados</span>
             <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
         </div>
-        <div class="kpi-value">{{ pagos|length }}</div>
+        <div class="kpi-value">{{ pagos_total }}</div>
         <div class="kpi-fx"><i class="bi bi-list-check"></i> En proceso</div>
     </div>
     <div class="kpi-card">
@@ -84,12 +84,83 @@
             </tbody>
         </table>
     </div>
+
+    {% if total_pages > 1 or total > 0 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-top">
+            <div class="pagination-info">
+                Mostrando <span>{{ (page - 1) * per_page + 1 }}</span> a
+                <span>{{ [page * per_page, total]|min }}</span> de
+                <span>{{ total }}</span> pagos
+            </div>
+            <div class="items-per-page">
+                <label for="per_page_select">Registros por página:</label>
+                <select id="per_page_select" onchange="updatePerPage(this.value)">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                </select>
+            </div>
+        </div>
+        <div class="pagination-controls">
+            {% if page > 1 %}
+                <a href="/reportes?desde={{ desde or '' }}&hasta={{ hasta or '' }}&page=1&per_page={{ per_page }}" class="pagination-btn">Primera</a>
+                <a href="/reportes?desde={{ desde or '' }}&hasta={{ hasta or '' }}&page={{ page - 1 }}&per_page={{ per_page }}" class="pagination-btn">← Anterior</a>
+            {% else %}
+                <button class="pagination-btn disabled" disabled>Primera</button>
+                <button class="pagination-btn disabled" disabled>← Anterior</button>
+            {% endif %}
+            <div class="pagination-page">
+                {% set window = 1 %}
+                {% set last_shown = namespace(value=0) %}
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == 1 or p == total_pages or (p >= page - window and p <= page + window) %}
+                        {% if last_shown.value != 0 and p - last_shown.value > 1 %}
+                            <span class="pagination-ellipsis">…</span>
+                        {% endif %}
+                        {% if p == page %}
+                            <button class="pagination-btn active" disabled>{{ p }}</button>
+                        {% else %}
+                            <a href="/reportes?desde={{ desde or '' }}&hasta={{ hasta or '' }}&page={{ p }}&per_page={{ per_page }}" class="pagination-btn">{{ p }}</a>
+                        {% endif %}
+                        {% set last_shown.value = p %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% if page < total_pages %}
+                <a href="/reportes?desde={{ desde or '' }}&hasta={{ hasta or '' }}&page={{ page + 1 }}&per_page={{ per_page }}" class="pagination-btn">Siguiente →</a>
+                <a href="/reportes?desde={{ desde or '' }}&hasta={{ hasta or '' }}&page={{ total_pages }}&per_page={{ per_page }}" class="pagination-btn">Última</a>
+            {% else %}
+                <button class="pagination-btn disabled" disabled>Siguiente →</button>
+                <button class="pagination-btn disabled" disabled>Última</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
+<style>
+  .pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    padding: 0 0.25rem;
+    color: var(--bs-secondary-color, #6c757d);
+    user-select: none;
+  }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  function updatePerPage(value) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('per_page', value);
+    params.set('page', '1');
+    window.location.href = '/reportes?' + params.toString();
+  }
+
   const ventasPorMarcaData = {{ ventas_por_marca | tojson }};
   const evolucionMensualData = {{ evolucion_mensual | tojson }};
 

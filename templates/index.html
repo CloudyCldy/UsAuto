@@ -78,7 +78,7 @@
     </div>
     <div class="kpi-card">
         <div class="kpi-top">
-            <span class="kpi-label">Sucursal</span>
+            <span class="kpi-label">Sucursal líder</span>
             <div class="kpi-icon"><i class="bi bi-geo-alt"></i></div>
         </div>
         <div class="kpi-value" style="font-size:1.4rem;">{{ metricas.sucursal_con_mas_ventas }}</div>
@@ -86,11 +86,11 @@
     </div>
     <div class="kpi-card">
         <div class="kpi-top">
-            <span class="kpi-label">Status de actividad</span>
-            <div class="kpi-icon"><i class="bi bi-activity"></i></div>
+            <span class="kpi-label">Cotizaciones pendientes</span>
+            <div class="kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
         </div>
-        <div class="kpi-value" style="font-size:1.4rem;">{{ stats.clientes }}</div>
-        <div class="kpi-fx positive"><i class="bi bi-check-circle"></i> Activo</div>
+        <div class="kpi-value" style="font-size:1.4rem;">{{ metricas.cotizaciones_pendientes }}</div>
+        <div class="kpi-fx"><i class="bi bi-hourglass-split"></i> Por cerrar</div>
     </div>
 </div>
 
@@ -106,11 +106,11 @@
     </div>
     <div class="panel-card">
         <div class="panel-header">
-            <h3 class="panel-title">Ventas por tipo de vehículo</h3>
-            <span class="badge rosa">Segmentación</span>
+            <h3 class="panel-title">Evolución mensual de ventas</h3>
+            <span class="badge purple">Serie temporal</span>
         </div>
         <div class="chart-frame">
-            <canvas id="chartVentasTipo" height="220"></canvas>
+            <canvas id="chartEvolucionMensual" height="220"></canvas>
         </div>
     </div>
 </div>
@@ -118,20 +118,20 @@
 <div class="content-grid">
     <div class="panel-card">
         <div class="panel-header">
+            <h3 class="panel-title">Ventas por tipo de vehículo</h3>
+            <span class="badge rosa">Segmentación</span>
+        </div>
+        <div class="chart-frame">
+            <canvas id="chartVentasTipo" height="220"></canvas>
+        </div>
+    </div>
+    <div class="panel-card">
+        <div class="panel-header">
             <h3 class="panel-title">Distribución de precios</h3>
             <span class="badge lavanda">Histograma</span>
         </div>
         <div class="chart-frame">
             <canvas id="chartPrecios" height="220"></canvas>
-        </div>
-    </div>
-    <div class="panel-card">
-        <div class="panel-header">
-            <h3 class="panel-title">Ingreso mensual vs presupuesto</h3>
-            <span class="badge purple">Scatter</span>
-        </div>
-        <div class="chart-frame">
-            <canvas id="chartIngresoPresupuesto" height="220"></canvas>
         </div>
     </div>
 </div>
@@ -148,11 +148,11 @@
     </div>
     <div class="panel-card">
         <div class="panel-header">
-            <h3 class="panel-title">Evolución mensual de ventas</h3>
-            <span class="badge purple">Serie temporal</span>
+            <h3 class="panel-title">Ingreso mensual vs presupuesto</h3>
+            <span class="badge purple">Scatter</span>
         </div>
         <div class="chart-frame">
-            <canvas id="chartEvolucionMensual" height="220"></canvas>
+            <canvas id="chartIngresoPresupuesto" height="220"></canvas>
         </div>
     </div>
 </div>
@@ -195,6 +195,42 @@
               label: (context) => `$${Number(context.parsed.y).toLocaleString('es-MX')}`
             }
           }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  if (evolucionMensual.length) {
+    new Chart(document.getElementById('chartEvolucionMensual'), {
+      type: 'line',
+      data: {
+        labels: evolucionMensual.map(item => item.mes),
+        datasets: [{
+          label: 'Ventas',
+          data: evolucionMensual.map(item => item.ventas),
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.18)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        events: [],
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
         },
         scales: {
           y: {
@@ -273,33 +309,6 @@
     });
   }
 
-  if (ingresoPresupuesto.length) {
-    new Chart(document.getElementById('chartIngresoPresupuesto'), {
-      type: 'scatter',
-      data: {
-        datasets: [{
-          label: 'Ingreso vs Presupuesto',
-          data: ingresoPresupuesto.map(item => ({ x: item.ingreso, y: item.presupuesto })),
-          backgroundColor: '#E85AAE'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        events: [],
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false }
-        },
-        scales: {
-          x: { title: { display: true, text: 'Ingreso mensual' } },
-          y: { title: { display: true, text: 'Presupuesto' } }
-        }
-      }
-    });
-  }
-
   if (precioMarca.length) {
     new Chart(document.getElementById('chartPrecioMarca'), {
       type: 'bar',
@@ -331,20 +340,14 @@
     });
   }
 
-  if (evolucionMensual.length) {
-    new Chart(document.getElementById('chartEvolucionMensual'), {
-      type: 'line',
+  if (ingresoPresupuesto.length) {
+    new Chart(document.getElementById('chartIngresoPresupuesto'), {
+      type: 'scatter',
       data: {
-        labels: evolucionMensual.map(item => item.mes),
         datasets: [{
-          label: 'Ventas',
-          data: evolucionMensual.map(item => item.ventas),
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34, 197, 94, 0.18)',
-          borderWidth: 3,
-          tension: 0.35,
-          fill: true,
-          pointRadius: 3
+          label: 'Ingreso vs Presupuesto',
+          data: ingresoPresupuesto.map(item => ({ x: item.ingreso, y: item.presupuesto })),
+          backgroundColor: '#E85AAE'
         }]
       },
       options: {
@@ -357,11 +360,8 @@
           tooltip: { enabled: false }
         },
         scales: {
-          y: {
-            ticks: {
-              callback: (value) => `$${Number(value).toLocaleString('es-MX')}`
-            }
-          }
+          x: { title: { display: true, text: 'Ingreso mensual' } },
+          y: { title: { display: true, text: 'Presupuesto' } }
         }
       }
     });

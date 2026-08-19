@@ -5,7 +5,13 @@
         <p class="eyebrow">Vendedores</p>
         <h1 class="page-title">Equipo comercial</h1>
     </div>
-    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalVendedor">Agregar vendedor</button>
+    <div class="d-flex gap-2 align-items-center">
+        <form method="get" action="/vendedores" class="d-flex gap-2 align-items-center">
+            <input class="form-control" type="text" name="q" value="{{ query or '' }}" placeholder="Buscar vendedor" aria-label="Buscar vendedor" style="max-width: 220px;">
+            <button class="btn btn-outline-primary" type="submit">Buscar</button>
+        </form>
+        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalVendedor">Agregar vendedor</button>
+    </div>
 </div>
 
 <div class="modal fade" id="modalVendedor" tabindex="-1" aria-hidden="true">
@@ -74,8 +80,8 @@
         </div>
         <div class="pagination-controls">
             {% if page > 1 %}
-                <a href="/vendedores?page=1&per_page={{ per_page }}" class="pagination-btn">Primera</a>
-                <a href="/vendedores?page={{ page - 1 }}&per_page={{ per_page }}" class="pagination-btn">← Anterior</a>
+                <a href="/vendedores?q={{ query or '' }}&page=1&per_page={{ per_page }}" class="pagination-btn">Primera</a>
+                <a href="/vendedores?q={{ query or '' }}&page={{ page - 1 }}&per_page={{ per_page }}" class="pagination-btn">← Anterior</a>
             {% else %}
                 <button class="pagination-btn disabled" disabled>Primera</button>
                 <button class="pagination-btn disabled" disabled>← Anterior</button>
@@ -84,7 +90,7 @@
             <div class="pagination-page">
                 {% set page_range = 2 %}
                 {% if page > page_range + 1 %}
-                    <a href="/vendedores?page=1&per_page={{ per_page }}" class="pagination-btn">1</a>
+                    <a href="/vendedores?q={{ query or '' }}&page=1&per_page={{ per_page }}" class="pagination-btn">1</a>
                     {% if page > page_range + 2 %}<span class="pagination-ellipsis">...</span>{% endif %}
                 {% endif %}
                 
@@ -92,19 +98,19 @@
                     {% if p == page %}
                         <button class="pagination-btn active" disabled>{{ p }}</button>
                     {% else %}
-                        <a href="/vendedores?page={{ p }}&per_page={{ per_page }}" class="pagination-btn">{{ p }}</a>
+                        <a href="/vendedores?q={{ query or '' }}&page={{ p }}&per_page={{ per_page }}" class="pagination-btn">{{ p }}</a>
                     {% endif %}
                 {% endfor %}
                 
                 {% if page < total_pages - page_range %}
                     {% if page < total_pages - page_range - 1 %}<span class="pagination-ellipsis">...</span>{% endif %}
-                    <a href="/vendedores?page={{ total_pages }}&per_page={{ per_page }}" class="pagination-btn">{{ total_pages }}</a>
+                    <a href="/vendedores?q={{ query or '' }}&page={{ total_pages }}&per_page={{ per_page }}" class="pagination-btn">{{ total_pages }}</a>
                 {% endif %}
             </div>
             
             {% if page < total_pages %}
-                <a href="/vendedores?page={{ page + 1 }}&per_page={{ per_page }}" class="pagination-btn">Siguiente →</a>
-                <a href="/vendedores?page={{ total_pages }}&per_page={{ per_page }}" class="pagination-btn">Última</a>
+                <a href="/vendedores?q={{ query or '' }}&page={{ page + 1 }}&per_page={{ per_page }}" class="pagination-btn">Siguiente →</a>
+                <a href="/vendedores?q={{ query or '' }}&page={{ total_pages }}&per_page={{ per_page }}" class="pagination-btn">Última</a>
             {% else %}
                 <button class="pagination-btn disabled" disabled>Siguiente →</button>
                 <button class="pagination-btn disabled" disabled>Última</button>

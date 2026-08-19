@@ -5,10 +5,33 @@
         <p class="eyebrow">Clientes</p>
         <h1 class="page-title">Base de clientes</h1>
     </div>
-    <form method="get" action="/clientes" class="d-flex gap-2 align-items-center">
-        <input class="form-control" type="text" name="q" value="{{ query or '' }}" placeholder="Buscar cliente" aria-label="Buscar cliente" style="max-width: 220px;">
-        <button class="btn btn-primary" type="submit">Buscar</button>
-    </form>
+        <div class="d-flex gap-2 align-items-center">
+                <form method="get" action="/clientes" class="d-flex gap-2 align-items-center">
+                        <input class="form-control" type="text" name="q" value="{{ query or '' }}" placeholder="Buscar cliente" aria-label="Buscar cliente" style="max-width: 220px;">
+                        <button class="btn btn-outline-primary" type="submit">Buscar</button>
+                </form>
+                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalCliente">Agregar cliente</button>
+        </div>
+</div>
+
+<div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-light">
+            <form method="post" action="/clientes">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agregar cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'partials/form_cliente.html' %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div class="table-card">
@@ -21,6 +44,7 @@
                     <th>Edad</th>
                     <th>Ingreso mensual</th>
                     <th>Tipo</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,6 +55,20 @@
                     <td>{{ c.edad }}</td>
                     <td>${{ c.ingreso_mensual }}</td>
                     <td><span class="badge lavender">{{ c.tipo_cliente }}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" type="button"
+                                data-bs-toggle="modal" data-bs-target="#modalEditCliente"
+                                data-id="{{ c._id }}"
+                                data-nombre="{{ c.nombre }}"
+                                data-apellido-paterno="{{ c.apellido_paterno }}"
+                                data-apellido-materno="{{ c.apellido_materno or '' }}"
+                                data-email="{{ c.email }}"
+                                data-telefono="{{ c.telefono or '' }}"
+                                data-edad="{{ c.edad or '' }}"
+                                data-ingreso-mensual="{{ c.ingreso_mensual or '' }}"
+                                data-tipo-cliente="{{ c.tipo_cliente or 'Nuevo' }}"
+                                data-presupuesto="{{ c.presupuesto or '' }}">Editar</button>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -95,6 +133,26 @@
     {% endif %}
 </div>
 
+<div class="modal fade" id="modalEditCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-light">
+            <form method="post" id="formEditCliente" action="/clientes">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    {% include 'partials/form_cliente.html' %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 function updatePerPage(value, url) {
     const params = new URLSearchParams(window.location.search);
@@ -103,4 +161,22 @@ function updatePerPage(value, url) {
     window.location.href = url + '?' + params.toString();
 }
 </script>
+{% block scripts %}
+<script>
+document.getElementById('modalEditCliente').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    const form = document.getElementById('formEditCliente');
+    form.action = '/clientes/' + btn.dataset.id + '/editar';
+    form.nombre.value = btn.dataset.nombre || '';
+    form.apellido_paterno.value = btn.dataset.apellidoPaterno || '';
+    form.apellido_materno.value = btn.dataset.apellidoMaterno || '';
+    form.email.value = btn.dataset.email || '';
+    form.telefono.value = btn.dataset.telefono || '';
+    form.edad.value = btn.dataset.edad || '';
+    form.ingreso_mensual.value = btn.dataset.ingresoMensual || '';
+    form.tipo_cliente.value = btn.dataset.tipoCliente || 'Nuevo';
+    form.presupuesto.value = btn.dataset.presupuesto || '';
+});
+</script>
+{% endblock %}
 {% endblock %}
