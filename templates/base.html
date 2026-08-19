@@ -16,22 +16,6 @@
     </style>
 </head>
 <body>
-    <div id="page-loader" class="page-loader" role="status" aria-label="Cargando página">
-        <div class="spinner" aria-hidden="true">
-            <div class="bar1"></div>
-            <div class="bar2"></div>
-            <div class="bar3"></div>
-            <div class="bar4"></div>
-            <div class="bar5"></div>
-            <div class="bar6"></div>
-            <div class="bar7"></div>
-            <div class="bar8"></div>
-            <div class="bar9"></div>
-            <div class="bar10"></div>
-            <div class="bar11"></div>
-            <div class="bar12"></div>
-        </div>
-    </div>
     <div class="app-shell">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -78,17 +62,6 @@
         }
     });
 
-    function hidePageLoader() {
-        const loader = document.getElementById('page-loader');
-        if (!loader) return;
-        loader.classList.add('page-loader-hidden');
-        window.setTimeout(function () {
-            if (loader.parentNode) loader.remove();
-        }, 350);
-    }
-
-    window.addEventListener('load', hidePageLoader);
-    window.setTimeout(hidePageLoader, 5000);
     </script>
     {% block scripts %}{% endblock %}
 </body>
