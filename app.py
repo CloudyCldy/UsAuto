@@ -1,4 +1,5 @@
 import csv
+import base64
 import io
 import os
 from datetime import datetime
@@ -15,7 +16,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.pdfgen import canvas as pdfcanvas
 from werkzeug.security import check_password_hash, generate_password_hash
 from config.database import get_db
@@ -115,7 +116,7 @@ app.jinja_env.globals.update(max=max, min=min)
 
 
 # --------------------------------------------------------------------------
-# Paleta de colores para el reporte PDF (coherente con la UI de la app)
+# Paleta de colores para el reporte PDF 
 # --------------------------------------------------------------------------
 PURPLE_DARK = colors.HexColor('#3A1F52')
 PURPLE = colors.HexColor('#6C3FA8')
@@ -652,6 +653,13 @@ def _make_canvas_factory(desde, hasta, logo_path):
     return ReportCanvas
 
 
+def _grafica_pdf(data_uri):
+    if not data_uri:
+        return None
+    encoded = data_uri.split(',', 1)[-1]
+    return io.BytesIO(base64.b64decode(encoded))
+
+
 @app.route('/reportes/exportar-pdf')
 @app.route('/reportes/exportar-pdf/')
 @app.route('/reportes/exportar')
@@ -760,6 +768,28 @@ def exportar_reportes_pdf():
         story.append(Paragraph('Sin datos disponibles para el periodo seleccionado.', styles['TextoNormalOscuro']))
     story.append(Spacer(1, 18))
 
+    # --- Vendedores con mas ventas ---
+    story.append(Paragraph('Vendedores con mas ventas', styles['SeccionTitulo']))
+    vendedor_rows = report_data.get('ventas_por_vendedor', [])
+    if vendedor_rows:
+        data = [['Vendedor', 'Ventas']]
+        for item in vendedor_rows:
+            data.append([item.get('vendedor', 'Sin vendedor'), format_currency(item.get('ventas', 0))])
+        vendedor_table = Table(data, colWidths=[300, 192], repeatRows=1)
+        vendedor_table.setStyle(_tabla_estilo(len(data), right_cols=[1]))
+        story.append(vendedor_table)
+    else:
+        story.append(Paragraph('Sin datos de vendedores para el periodo seleccionado.', styles['TextoNormalOscuro']))
+
+    story.append(Spacer(1, 12))
+    story.append(Paragraph('Graficas de ventas', styles['SeccionTitulo']))
+    graficas_pdf = generar_graficas_base64(df)
+    for key in ('ventas_por_vendedor', 'evolucion_mensual_ventas'):
+        image_reader = _grafica_pdf(graficas_pdf.get(key))
+        if image_reader:
+            story.append(Image(image_reader, width=480, height=240))
+            story.append(Spacer(1, 10))
+
     # --- Evolución mensual ---
     story.append(Paragraph('Evolución mensual', styles['SeccionTitulo']))
     mes_rows = report_data.get('evolucion_mensual', [])
@@ -811,7 +841,7 @@ def exportar_reportes_pdf():
     buffer.close()
 
     response = Response(pdf_data, mimetype='application/pdf')
-    response.headers['Content-Disposition'] = 'attachment; filename=reporte_agencia.pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=reporte_usagi_motors.pdf'
     return response
 
 

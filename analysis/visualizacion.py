@@ -19,6 +19,7 @@ def obtener_datos_reportes_negocio(df=None):
     if df.empty:
         return {
             'ventas_por_marca': [],
+            'ventas_por_vendedor': [],
             'evolucion_mensual': [],
             'ventas_por_mes': [],
             'tickets_por_mes': [],
@@ -38,10 +39,24 @@ def obtener_datos_reportes_negocio(df=None):
         .rename(columns={'total': 'ventas'})
     )
 
+    ventas_vendedor = pd.DataFrame(columns=['vendedor', 'ventas'])
+    if 'vendedor' in df.columns:
+        ventas_vendedor = (
+            df.assign(vendedor=df['vendedor'].fillna('Sin vendedor'))
+            .groupby('vendedor', as_index=False)['total']
+            .sum()
+            .sort_values('total', ascending=False)
+            .rename(columns={'total': 'ventas'})
+        )
+
     datos = {
         'ventas_por_marca': [
             {'marca': row['marca'], 'ventas': float(row['ventas'])}
             for _, row in ventas_marca.iterrows()
+        ],
+        'ventas_por_vendedor': [
+            {'vendedor': row['vendedor'], 'ventas': float(row['ventas'])}
+            for _, row in ventas_vendedor.iterrows()
         ],
         'evolucion_mensual': [
             {'mes': row['mes'], 'ventas': float(row['ventas'])}
@@ -67,8 +82,10 @@ def obtener_df_visualizacion():
 
     pipeline = [
         {'$lookup': {'from': 'vehiculos', 'localField': 'vehiculo_id', 'foreignField': '_id', 'as': 'vehiculo'}},
+        {'$lookup': {'from': 'vendedores', 'localField': 'vendedor_id', 'foreignField': '_id', 'as': 'vendedor'}},
         {'$lookup': {'from': 'sucursales', 'localField': 'sucursal_id', 'foreignField': '_id', 'as': 'sucursal'}},
         {'$unwind': '$vehiculo'},
+        {'$unwind': {'path': '$vendedor', 'preserveNullAndEmptyArrays': True}},
         {'$unwind': '$sucursal'},
         {'$project': {
             '_id': 1,
@@ -78,6 +95,7 @@ def obtener_df_visualizacion():
             'modelo': '$vehiculo.modelo',
             'tipo': '$vehiculo.tipo',
             'precio': '$vehiculo.precio',
+            'vendedor': '$vendedor.nombre',
             'sucursal': '$sucursal.nombre',
             'ciudad': '$sucursal.ciudad'
         }}
@@ -102,12 +120,28 @@ def _figura_a_base64(fig):
     return 'data:image/png;base64,' + encoded
 
 
-def generar_graficas_base64():
-    df = obtener_df_visualizacion()
+def generar_graficas_base64(df=None):
+    df = obtener_df_visualizacion() if df is None else df
     if df.empty:
         return {}
 
     graficas = {}
+
+    if 'vendedor' in df.columns:
+        ventas_vendedor = (
+            df.assign(vendedor=df['vendedor'].fillna('Sin vendedor'))
+            .groupby('vendedor', as_index=False)['total']
+            .sum()
+            .sort_values('total', ascending=False)
+            .head(10)
+        )
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sns.barplot(data=ventas_vendedor, x='total', y='vendedor', ax=ax, color='#6C3FA8')
+        ax.set_title('Vendedores con mas ventas')
+        ax.set_xlabel('Ventas')
+        ax.set_ylabel('Vendedor')
+        fig.tight_layout()
+        graficas['ventas_por_vendedor'] = _figura_a_base64(fig)
 
     ventas_marca = df.groupby('marca', as_index=False)['total'].sum().sort_values('total', ascending=False)
     fig, ax = plt.subplots(figsize=(10, 5))
